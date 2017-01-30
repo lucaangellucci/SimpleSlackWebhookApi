@@ -1,6 +1,8 @@
 package com.langellu.slack.webhook;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -23,19 +25,26 @@ public class SlackApi {
 
     private SlackApi(URI webhookUri) {
         this.webhookUri = webhookUri;
-        this.gson = new Gson();
+        this.gson = new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create();
     }
 
     public static SlackApiBuilder builder() {
         return new SlackApiBuilder();
     }
 
+
     public void sendMessage(SlackMessage message) throws SlackException {
+
         try(CloseableHttpClient httpclient = HttpClients.createDefault()) {
             HttpPost httpPost = new HttpPost(webhookUri);
 
+            System.out.println(gson.toJson(message));
+
             StringEntity postingString = new StringEntity(gson.toJson(message));
             httpPost.setEntity(postingString);
+
             httpPost.setHeader("Content-type", "application/json");
             CloseableHttpResponse response = httpclient.execute(httpPost);
 
@@ -73,4 +82,5 @@ public class SlackApi {
             }
         }
     }
+
 }
